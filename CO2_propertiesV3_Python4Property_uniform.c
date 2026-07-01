@@ -66,6 +66,7 @@ enum {
 static Table2D co2_density = {0};
 static Table2D co2_viscosity = {0};
 static Table2D co2_conductivity = {0};
+static Table2D co2_sound_speed = {0};
 static Table2D co2_cp_2d = {0};
 static PhaseTable2D co2_phase = {0};
 
@@ -513,6 +514,7 @@ DEFINE_ON_DEMAND(CO2_import_property_tables_uniform)
     read_table_2d("co2_density.csv", &co2_density);
     read_table_2d("co2_viscosity.csv", &co2_viscosity);
     read_table_2d("co2_conductivity.csv", &co2_conductivity);
+    read_table_2d("co2_sound_speed.csv", &co2_sound_speed);
     read_table_2d("co2_cp.csv", &co2_cp_2d);
 
 #if ENABLE_PHASE_DIAGNOSTICS
@@ -546,6 +548,13 @@ DEFINE_PROPERTY(CO2_uniform_thermal_conductivity, c, thread)
     return interpolate_table_uniform(t, p_abs, &co2_conductivity, "thermal conductivity");
 }
 
+DEFINE_PROPERTY(CO2_uniform_sound_speed, c, thread)
+{
+    double t = C_T(c, thread);
+    double p_abs = C_P(c, thread) + operating_pressure;
+    return interpolate_table_uniform(t, p_abs, &co2_sound_speed, "speed of sound");
+}
+
 DEFINE_SPECIFIC_HEAT(CO2_uniform_cp, T, Tref, h, yi)
 {
     double cp = interpolate_cp_uniform(T);
@@ -557,7 +566,7 @@ DEFINE_ON_DEMAND(CO2_test_property_tables_uniform)
 {
     double test_t = 623.15;
     double test_p = 14.0e6;
-    double rho, mu, k, cp;
+    double rho, mu, k, a, cp;
 
     if (!co2_density.uniform_ready || cp_ref == NULL) {
         Message("\n[CO2-UDF Warning] Please run CO2_import_property_tables_uniform first with uniform tables.\n");
@@ -567,6 +576,7 @@ DEFINE_ON_DEMAND(CO2_test_property_tables_uniform)
     rho = interpolate_table_uniform(test_t, test_p, &co2_density, "density");
     mu = interpolate_table_uniform(test_t, test_p, &co2_viscosity, "viscosity");
     k = interpolate_table_uniform(test_t, test_p, &co2_conductivity, "thermal conductivity");
+    a = interpolate_table_uniform(test_t, test_p, &co2_sound_speed, "speed of sound");
     cp = interpolate_cp_uniform(test_t);
 
     Message("\n============ CO2 uniform table test ============\n");
@@ -574,6 +584,7 @@ DEFINE_ON_DEMAND(CO2_test_property_tables_uniform)
     Message("Density              = %.9g kg/m3\n", rho);
     Message("Viscosity            = %.9g Pa s\n", mu);
     Message("Thermal conductivity = %.9g W/m/K\n", k);
+    Message("Speed of sound       = %.9g m/s\n", a);
     Message("Cp(reference P)      = %.9g J/kg/K\n", cp);
     Message("================================================\n\n");
 }

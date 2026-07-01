@@ -100,3 +100,26 @@ ip = floor((P - Pmin) / dP);
 - 使用临界区加密表：选择 `CO2_propertiesV3_Python4Property.c`。
 - 使用严格均匀表并追求速度：选择 `CO2_propertiesV3_Python4Property_uniform.c`。
 - 学习代码逻辑：阅读本地的 `CO2_propertiesV3_Python4Property_comments.c`，不要将该详注版作为 GitHub 正式版上传。
+
+## 10. 声速处理
+
+对于可压缩 sCO2 射流，声速直接影响马赫数、膨胀波、激波和欠膨胀射流结构判断。当前 UDF 已支持读取 `co2_sound_speed.csv`，并提供可挂接的声速物性函数：
+
+- 非均匀版本：`CO2_table_sound_speed`
+- 均匀版本：`CO2_uniform_sound_speed`
+
+这里推荐直接使用 CoolProp 生成的声速表，而不是在 UDF 中仅由密度表数值求导得到声速。原因是热力学声速本质上满足：
+
+```text
+a^2 = (∂p/∂rho)_s
+```
+
+即等熵压力-密度导数，而不是普通的等温密度斜率。Fluent 手册中的体积模量示例适合弱可压缩液体或人为定义的线性密度模型，其中声速由给定体积模量和密度模型解析得到。对于真实气体/超临界 CO2，声速同时受温度、压力、热容比、真实气体状态方程及近临界物性影响。若只对 `rho(P,T)` 表做简单压力导数，通常得到的是近似的等温压缩性信息，并不等价于等熵声速。
+
+因此，当前更稳妥的策略是：
+
+1. Python 使用 CoolProp `PropsSI("A", "T", T, "P", P, "CO2")` 生成声速表。
+2. UDF 像密度、粘度、导热率一样对 `a(P,T)` 进行二维插值。
+3. 后处理中用 `Mach = |v| / a` 计算局部马赫数。
+
+这种方法避免了在 Fluent UDF 中对密度表做噪声敏感的数值微分，也保持了声速与 CoolProp 真实气体热力学模型的一致性。

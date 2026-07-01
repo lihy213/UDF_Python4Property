@@ -15,6 +15,7 @@ Put these files in the Fluent working directory before running the import on-dem
 - `co2_density.csv`
 - `co2_viscosity.csv`
 - `co2_conductivity.csv`
+- `co2_sound_speed.csv`
 - `co2_cp.csv`
 - `co2_phase.csv` optional, used only for phase-boundary diagnostics
 
@@ -36,6 +37,7 @@ Pressure in the first column must be MPa. Temperatures in the header must be K.
    - Density: `CO2_table_density`
    - Viscosity: `CO2_table_viscosity`
    - Thermal conductivity: `CO2_table_thermal_conductivity`
+   - Speed of sound: `CO2_table_sound_speed`
    - Specific heat: `CO2_table_cp`
 4. Optionally run `CO2_test_property_tables` to print one test point.
 
@@ -45,6 +47,7 @@ For the uniform-grid version, use these hook names instead:
 - Density: `CO2_uniform_density`
 - Viscosity: `CO2_uniform_viscosity`
 - Thermal conductivity: `CO2_uniform_thermal_conductivity`
+- Speed of sound: `CO2_uniform_sound_speed`
 - Specific heat: `CO2_uniform_cp`
 - Test function: `CO2_test_property_tables_uniform`
 
